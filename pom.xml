@@ -13,13 +13,13 @@
 		<fhirVersion>1.18.0</fhirVersion>
 		<gsonVersion>2.8.5</gsonVersion>
 		<mysqlConnectorVersion>8.0.15</mysqlConnectorVersion>
-		<springBootVersion>2.1.5.RELEASE</springBootVersion>
+		<springBootVersion>2.1.6.RELEASE</springBootVersion>
 	</properties>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.5.RELEASE</version>
+		<version>2.1.6.RELEASE</version>
 	</parent>
 
 	<dependencies>
@@ -175,7 +175,7 @@
 					<execution>
 						<id>generate-rpm</id>
 						<goals>
-							<goal>rpm</goal>
+							<goal>attached-rpm</goal>
 						</goals>
 					</execution>
 				</executions>
