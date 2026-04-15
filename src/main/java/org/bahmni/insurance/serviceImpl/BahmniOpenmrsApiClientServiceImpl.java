@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+import static org.apache.log4j.Logger.getLogger;
+
 import org.apache.commons.codec.binary.Base64;
 import org.bahmni.insurance.exception.ApiException;
 import org.bahmni.insurance.model.BahmniDiagnosis;
@@ -28,6 +31,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 @Component	
 public class BahmniOpenmrsApiClientServiceImpl implements IApiClientService {
+
+	private final Logger logger = getLogger(BahmniOpenmrsApiClientServiceImpl.class);
 
 	@Value("${openmrs.root.url}")
 	private String openmrsAPIUrl;
@@ -63,24 +68,53 @@ public class BahmniOpenmrsApiClientServiceImpl implements IApiClientService {
 
 	@Override
 	public ResponseEntity<String> sendPostRequest(String requestJson, String url) {
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("---------- sendPostRequest ----------");
+//		logger.error("requestJson : " + requestJson);
+//		logger.error("URL : " + url);
+
 		HttpHeaders headers = getAuthHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		headers.add("Content-Type", "application/json");
 		HttpEntity<String> entity = new HttpEntity<String>(requestJson, headers);
-		return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+//		logger.error("Response : " + response.getBody());
+
+		return response;
 	}
 
 	@Override
 	public String sendGetRequest(String url) {
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("---------- sendGetRequest ----------");
+//		logger.error("URL : " + url);
+
 		HttpHeaders headers = getAuthHeaders();
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		return restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
+		String response =  restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
+
+//		logger.error("Response : " + response);
+
+		return response;
 	}
 	
 	public VisitSummary getVisitDetail(String visitUUID) throws JsonParseException, JsonMappingException, IOException {
 		String visitDetailsJson =  sendGetRequest(openmrsAPIUrl+"/bahmnicore/visit/summary?visitUuid="+visitUUID);
 		VisitSummary visit = null;
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("VISIT_DETAILS_JSON : " + visitDetailsJson);
+
 		if(visitDetailsJson != null){
 			visit = InsuranceUtils.mapFromJson(visitDetailsJson, VisitSummary.class);
 		} else {

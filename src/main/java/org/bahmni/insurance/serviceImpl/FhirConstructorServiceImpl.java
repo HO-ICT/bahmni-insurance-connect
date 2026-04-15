@@ -48,8 +48,13 @@ import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.SingleValidationMessage;
 import ca.uhn.fhir.validation.ValidationResult;
 
+import org.apache.log4j.Logger;
+import static org.apache.log4j.Logger.getLogger;
+
 @Component
 public class FhirConstructorServiceImpl extends AFhirConstructorService {
+
+	private final Logger logger = getLogger(FhirConstructorServiceImpl.class);
 
 	@Autowired
 	private AppProperties properties;
@@ -120,6 +125,12 @@ public class FhirConstructorServiceImpl extends AFhirConstructorService {
 
 		// BillablePeriod
 		Period period = new Period();
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("VISIT_UUID : " + claimParam.getVisitUUID());
+
 		VisitSummary visitDetails = bahmniApiService.getVisitDetail(claimParam.getVisitUUID());
 		period.setStart(new Date( visitDetails.getStartDateTime()));
 		if( visitDetails.getStopDateTime() != null) {
