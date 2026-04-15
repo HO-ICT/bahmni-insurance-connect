@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.security.cert.X509Certificate;
+import javax.net.ssl.*;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bahmni.insurance.AppProperties;
@@ -81,12 +83,25 @@ public class ImisRestClientServiceImpl extends AInsuranceClientService {
 
 	private ResponseEntity<String> sendPostRequest(String requestJson, String url) {
 
+		disableSslVerification();
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("---------- sendPostRequest ----------");
+//		logger.error("requestJson : " + requestJson);
+//		logger.error("URL : " + url);
+
 		HttpHeaders headers = createHeaders(properties.imisUser, properties.imisPassword);
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		headers.add("Content-Type", "application/json");
 		headers.add("remote-user", properties.openImisRemoteUser); 
 		HttpEntity<String> entity = new HttpEntity<String>(requestJson, headers);
-		return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+//		logger.error("Response : " + response.getBody());
+
+		return response;
 
 		/*
 		 * ClientHelper helper = getClientHelper(ImisConstants.REST_CLIENT);
@@ -97,12 +112,25 @@ public class ImisRestClientServiceImpl extends AInsuranceClientService {
 	}
 
 	private String sendGetRequest(String url) {
+
+		disableSslVerification();
+
+		/**
+		 * Temp log to verify API data
+		 * */
+//		logger.error("---------- sendGetRequest ----------");
+//		logger.error("URL : " + url);
+
 		HttpHeaders headers = createHeaders(properties.imisUser, properties.imisPassword);
 		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		headers.add("Content-Type", "application/json");
 		headers.add("remote-user", properties.openImisRemoteUser); 
 		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		return restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
+		String response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
+
+//		logger.error("Response : " + response);
+
+		return response;
 
 	}
 
@@ -267,7 +295,7 @@ public class ImisRestClientServiceImpl extends AInsuranceClientService {
 
 	@Override
 	public ClaimResponseModel getClaimResponse(String claimID) {
-		String claimResponseStr = sendGetRequest(properties.imisUrl+"/ClaimResponse/"+claimID);
+		String claimResponseStr = sendGetRequest(properties.imisUrl+"ClaimResponse/"+claimID);
 		ClaimResponse claimResponse = (ClaimResponse) FhirParser.parseResource(claimResponseStr);
 		return populateClaimRespModel(claimResponse, null); 
 		
@@ -307,10 +335,40 @@ public class ImisRestClientServiceImpl extends AInsuranceClientService {
 		
 		logger.error("After insuree detail" + insureeModel);
 		return insureeModel;
+	}
+
+	private void disableSslVerification() {
+		// TODO Auto-generated method stub
+		try {
+			// Create a trust manager that does not validate certificate chains
+			TrustManager[] trustAllCerts = new TrustManager[] {
+					new X509TrustManager() {
+						public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+							return null;
+						}
+
+						public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+
+						public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+					}
+			};
+
+			// Install the all-trusting trust manager
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+			// Create all-trusting host name verifier
+			HostnameVerifier allHostsValid = new HostnameVerifier() {
+				public boolean verify(String hostname, SSLSession session) {
+					return true;
+				}
+			};
+
+			// Install the all-trusting host verifier
+			HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-	
-
-	
-
+	}
 }
